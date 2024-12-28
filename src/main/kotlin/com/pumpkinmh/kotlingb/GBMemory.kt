@@ -1,4 +1,4 @@
-package org.example.com.pumpkinmh.kotlingb
+package com.pumpkinmh.kotlingb
 
 @OptIn(ExperimentalUnsignedTypes::class)
 class GBMemory {
@@ -59,7 +59,7 @@ class GBMemory {
         val mostSignificantByte = get(upperAddress)
 
         val actualShort: UShort =
-            ((mostSignificantByte.toUInt().shl(8)).toUShort()) or (leastSignificantByte.toUShort())
+            (mostSignificantByte.toUShort().shl(8)) or (leastSignificantByte.toUShort())
 
         return actualShort
     }
@@ -81,8 +81,8 @@ class GBMemory {
     }
 
     internal operator fun set(lowerAddress: Int, upperAddress: Int, data: UShort) {
-        val leastSignifcantByte: UByte = data.toInt().and(0xFF).toUByte()
-        val mostSignificantByte:UByte = data.toInt().and(0xFF00).shr(8).toUByte()
+        val leastSignifcantByte: UByte = data.and(0xFFu).toUByte()
+        val mostSignificantByte:UByte = data.and(0xFF00u).shr(8).toUByte()
 
         set(lowerAddress,leastSignifcantByte)
         set(upperAddress,mostSignificantByte)

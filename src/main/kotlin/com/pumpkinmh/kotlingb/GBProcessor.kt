@@ -1,4 +1,4 @@
-package org.example.com.pumpkinmh.kotlingb
+package com.pumpkinmh.kotlingb
 
 class GBProcessor {
 }
