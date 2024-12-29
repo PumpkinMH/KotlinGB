@@ -11,7 +11,7 @@ class GBCartridge internal constructor(romFile: File) {
     init {
         // Store file bytes in a temporary expandable list, then transfer to a proper array
         val fileInputStream = FileInputStream(romFile)
-        var fileBufferData = mutableListOf<Int>()
+        val fileBufferData = mutableListOf<Int>()
 
         var data: Int
         while(fileInputStream.read().also { data = it} != -1) {
@@ -24,5 +24,19 @@ class GBCartridge internal constructor(romFile: File) {
         }
 
         fileInputStream.close()
+    }
+
+    private val cartrideTypeByte: UByte
+    private val romSize: UByte
+    private val ramSize: UByte
+
+    init {
+        cartrideTypeByte = cartridgeByteData[0x147]
+        romSize = cartridgeByteData[0x148]
+        ramSize = cartridgeByteData[0x149]
+
+        if(cartrideTypeByte.toUInt() != 0x00u) {
+            throw NotImplementedError("This cartridge has a mapper. Mappers are not supported yet")
+        }
     }
 }

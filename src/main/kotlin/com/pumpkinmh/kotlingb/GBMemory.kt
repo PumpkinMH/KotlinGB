@@ -42,6 +42,8 @@ class GBMemory {
     val workRAM: UByteArray = TODO()
     val highRAM: UByteArray = TODO()
 
+    val cartridge: GBCartridge = TODO()
+
     internal operator fun get(address: Int): UByte {
         if(address > 0xFFFF) {
             throw IllegalArgumentException("Hex address " + Integer.toHexString(address) + " is too large for 16 bit address space")
