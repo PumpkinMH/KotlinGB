@@ -49,10 +49,28 @@ class GBMemory {
             throw IllegalArgumentException("Hex address " + Integer.toHexString(address) + " is too large for 16 bit address space")
         }
 
-        TODO()
+        when (address) {
+            in ROM_BANK_FIXED_START..ROM_BANK_FIXED_END -> return cartridge[address]
+            in ROM_BANK_DYNAMIC_START..ROM_BANK_DYNAMIC_END -> return cartridge[address]
+            in VRAM_START..VRAM_END -> TODO()
+            in EXTERNAL_RAM_START..EXTERNAL_RAM_END -> TODO()
+            in WORK_RAM_FIXED_START..WORK_RAM_FIXED_END -> return workRAM[address - WORK_RAM_FIXED_START]
+            in WORK_RAM_DYNAMIC_START..WORK_RAM_DYNAMIC_END -> return workRAM[address - WORK_RAM_FIXED_START]
+            in ECHO_RAM_START..ECHO_RAM_END -> return workRAM[address - ECHO_RAM_START]
+            in OBJECT_ATTRIBUTE_START..OBJECT_ATTRIBUTE_END -> TODO()
+            in UNUSABLE_START..UNUSABLE_END -> TODO()
+            in IO_REGISTERS_START..IO_REGISTERS_END -> TODO()
+            in HIGH_RAM_START..HIGH_RAM_END -> return highRAM[address - HIGH_RAM_START]
+            IE_REGISTER_START_END -> TODO()
+        }
+        return 0x00u // This should never be returned
     }
 
     internal operator fun get(address: UShort): UByte {
+        return get(address.toInt())
+    }
+
+    internal operator fun get(address: UInt): UByte {
         return get(address.toInt())
     }
 
@@ -70,6 +88,10 @@ class GBMemory {
         return get(lowerAddress.toInt(), upperAddress.toInt())
     }
 
+    internal operator fun get(lowerAddress: UInt, upperAddress: UInt): UShort {
+        return get(lowerAddress.toInt(),upperAddress.toInt())
+    }
+
     internal operator fun set(address: Int, data: UByte) {
         if(address > 0xFFFF) {
             throw IllegalArgumentException("Hex address " + Integer.toHexString(address) + " is too large for 16 bit address space")
@@ -79,6 +101,10 @@ class GBMemory {
     }
 
     internal operator fun set(address: UShort, data: UByte) {
+        set(address.toInt(), data)
+    }
+
+    internal operator fun set(address: UInt, data: UByte) {
         set(address.toInt(), data)
     }
 
@@ -93,6 +119,10 @@ class GBMemory {
     }
 
     internal operator fun set(lowerAddress: UShort, upperAddress: UShort, data: UShort) {
+        set(lowerAddress.toInt(), upperAddress.toInt(), data)
+    }
+
+    internal operator fun set(lowerAddress: UInt, upperAddress: UInt, data: UShort) {
         set(lowerAddress.toInt(), upperAddress.toInt(), data)
     }
 
