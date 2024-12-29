@@ -39,4 +39,12 @@ class GBCartridge internal constructor(romFile: File) {
             throw NotImplementedError("This cartridge has a mapper. Mappers are not supported yet")
         }
     }
+
+    internal operator fun get(address: Int): UByte {
+        return cartridgeByteData[address]
+    }
+
+    internal operator fun set(address: Int, value: UByte) {
+        throw NotImplementedError("Mappers have not been implemented, cartridge is strictly read only")
+    }
 }
