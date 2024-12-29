@@ -30,23 +30,29 @@ class GBProcessor {
 
     // Opcodes
     // Load the value from the register on the right into the register on the left
-    fun LD_r8_r8(targetRegister: ByteRegister, sourceRegister: ByteRegister) {
+    fun LD_r8_r8(targetRegister: ByteRegister, sourceRegister: ByteRegister): Int {
         registers[targetRegister.registerIndex] = registers[sourceRegister.registerIndex]
+
+        return 1
     }
 
     // Load the value n8 (from byte 2) into the register r8
-    fun LD_r8_n8(targetRegister: ByteRegister) {
-        val sourceValue = memory[(stackPointer + 1u).toInt()]
+    fun LD_r8_n8(targetRegister: ByteRegister): Int {
+        val sourceValue = memory[programCounter + 1u]
         registers[targetRegister.registerIndex] = sourceValue
+
+        return 2
     }
 
     // Load the value n16 (from bytes 2 and 3) into register r16
-    fun LD_r16_n16(targetRegister: ShortRegister) {
-        val lowerByte = memory[stackPointer + 1u]
-        val upperByte = memory[stackPointer + 2u]
+    fun LD_r16_n16(targetRegister: ShortRegister): Int {
+        val lowerByte = memory[programCounter + 1u]
+        val upperByte = memory[programCounter + 2u]
 
         registers[targetRegister.highRegisterIndex] = upperByte
         registers[targetRegister.lowRegisterIndex] = lowerByte
+
+        return 3
     }
 
 
