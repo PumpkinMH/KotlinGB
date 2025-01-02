@@ -78,8 +78,7 @@ class GBMemory {
         val leastSignificantByte = get(lowerAddress)
         val mostSignificantByte = get(upperAddress)
 
-        val actualShort: UShort =
-            (mostSignificantByte.toUShort().shl(8)) or (leastSignificantByte.toUShort())
+        val actualShort: UShort = Pair(mostSignificantByte, leastSignificantByte).toUShort()
 
         return actualShort
     }
@@ -109,8 +108,9 @@ class GBMemory {
     }
 
     internal operator fun set(lowerAddress: Int, upperAddress: Int, data: UShort) {
-        val leastSignifcantByte: UByte = data.and(0xFFu).toUByte()
-        val mostSignificantByte:UByte = data.and(0xFF00u).shr(8).toUByte()
+        val bytePair = data.toBytePair()
+        val leastSignifcantByte: UByte = bytePair.second
+        val mostSignificantByte:UByte = bytePair.first
 
         set(lowerAddress,leastSignifcantByte)
         set(upperAddress,mostSignificantByte)
