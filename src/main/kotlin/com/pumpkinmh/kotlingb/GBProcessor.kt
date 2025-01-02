@@ -29,30 +29,37 @@ class GBProcessor {
 
 
     // Opcodes
+    // First value in pair represents the amount to increment PC
+    // Second value in pair represents the number of clock cycles used
+
     // Load the value from the register on the right into the register on the left
-    fun LD_r8_r8(targetRegister: ByteRegister, sourceRegister: ByteRegister): Int {
+    fun LD_r8_r8(targetRegister: ByteRegister, sourceRegister: ByteRegister): Pair<Int,Int> {
         registers[targetRegister.registerIndex] = registers[sourceRegister.registerIndex]
 
-        return 1
+        return Pair(1,1)
     }
 
     // Load the value n8 (from byte 2) into the register r8
-    fun LD_r8_n8(targetRegister: ByteRegister): Int {
+    fun LD_r8_n8(targetRegister: ByteRegister): Pair<Int,Int> {
         val sourceValue = memory[programCounter + 1u]
         registers[targetRegister.registerIndex] = sourceValue
 
-        return 2
+        return Pair(2,2)
     }
 
     // Load the value n16 (from bytes 2 and 3) into register r16
-    fun LD_r16_n16(targetRegister: ShortRegister): Int {
+    fun LD_r16_n16(targetRegister: ShortRegister): Pair<Int,Int> {
         val lowerByte = memory[programCounter + 1u]
         val upperByte = memory[programCounter + 2u]
 
         registers[targetRegister.highRegisterIndex] = upperByte
         registers[targetRegister.lowRegisterIndex] = lowerByte
 
-        return 3
+        return Pair(3,3)
+    }
+
+    fun LD_HL_r8(sourceRegister: ShortRegister): Pair<Int,Int> {
+        TODO()
     }
 
 

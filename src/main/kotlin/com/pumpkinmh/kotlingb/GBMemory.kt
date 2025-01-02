@@ -39,10 +39,10 @@ class GBMemory {
         const val IE_REGISTER_START_END = 0xFFFF
     }
 
-    val workRAM: UByteArray = TODO()
-    val highRAM: UByteArray = TODO()
+    internal val workRAM: UByteArray = TODO()
+    internal val highRAM: UByteArray = TODO()
 
-    val cartridge: GBCartridge = TODO()
+    internal val cartridge: GBCartridge = TODO()
 
     internal operator fun get(address: Int): UByte {
         if(address > 0xFFFF) {
