@@ -1,5 +1,6 @@
 package com.pumpkinmh.kotlingb
 
+import kotlin.math.pow
 import kotlin.math.sign
 
 @OptIn(ExperimentalUnsignedTypes::class)
@@ -311,8 +312,8 @@ class GBProcessor {
 
         setFlag(false, Flag.Z)
         setFlag(false, Flag.N)
-        setFlag((oldLowerByte.toInt() + (signedByte.toInt() and 0xF)) > 0xF,Flag.H)
-        setFlag((oldLowerByte.toInt() + (signedByte.toInt() and 0xFF)) > 0xFF,Flag.H)
+        setFlag(carryFrom(oldLowerByte.toUInt(), signedByte.toUInt(), 0xF), Flag.H)
+        setFlag(carryFrom(oldLowerByte.toUInt(), signedByte.toUInt(), 0xFF),Flag.C)
 
         return Pair(2,3)
     }
@@ -327,6 +328,87 @@ class GBProcessor {
         return Pair(1,2)
     }
 
+    // Add r8 and the carry bit to register A
+    fun ADC_A_r8(sourceRegister: ByteRegister): Pair<Int, Int> {
+        val carry = getCarryBit()
+        val result = (registers[ByteRegister.A.index] + registers[sourceRegister.index] + carry).toUByte()
+        registers[ByteRegister.A.index] = result
+
+        setFlag(result.toUInt() == 0u, Flag.Z)
+        setFlag(false, Flag.N)
+        setFlag(carryFrom(registers[ByteRegister.A.index], registers[sourceRegister.index], carry, 0xF), Flag.H)
+        setFlag(carryFrom(registers[ByteRegister.A.index],registers[sourceRegister.index], carry, 0xFF), Flag.C)
+
+        return Pair(1,1)
+    }
+
+    // Add the byte at the address in HL and the carry bit to register A
+    fun ADC_A_HL(): Pair<Int,Int> {
+        val carry = getCarryBit()
+        val upperByte = registers[ShortRegister.HL.highIndex]
+        val lowerByte = registers[ShortRegister.HL.lowIndex]
+        val byteAddress = Pair(upperByte, lowerByte).toUShort()
+
+        val sum = memory[byteAddress] + carry
+        registers[ByteRegister.A.index] = sum.toUByte()
+
+        setFlag(sum.toUInt() == 0u, Flag.Z)
+        setFlag(false, Flag.N)
+        setFlag(carryFrom(memory[byteAddress], carry, 0xF), Flag.H)
+        setFlag(carryFrom(memory[byteAddress], carry, 0xFF), Flag.C)
+
+        return Pair(1,2)
+    }
+
+    fun ADC_A_n8(): Pair<Int,Int> {
+        val carryBit = getCarryBit()
+        val immediateValue = memory[programCounter + 1u]
+        val registerValue = registers[ByteRegister.A.index]
+
+        val sum = (carryBit + immediateValue + registerValue)
+        registers[ByteRegister.A.index] = (carryBit + immediateValue + registerValue).toUByte()
+
+        setFlag(sum == 0u, Flag.Z)
+        setFlag(false, Flag.N)
+        setFlag(carryFrom(carryBit, immediateValue, registerValue,0xF), Flag.H)
+        setFlag(carryFrom(carryBit, immediateValue, registerValue, 0xFF), Flag.C)
+
+        return Pair(2,2)
+    }
+
+    fun ADD_A_r8(sourceRegister: ByteRegister): Pair<Int,Int> {
+        val registerByte = registers[sourceRegister.index]
+        val aByte = registers[ByteRegister.A.index]
+
+        val sum = registerByte + aByte
+        registers[ByteRegister.A.index] = sum.toUByte()
+
+        setFlag(sum == 0u, Flag.Z)
+        setFlag(false, Flag.N)
+        setFlag(carryFrom(registerByte,aByte,0xF), Flag.N)
+        setFlag(carryFrom(registerByte,aByte,0xFF), Flag.C)
+
+        return Pair(1,1)
+    }
+
+    private fun carryFrom(primary: UInt, secondary: UInt, binaryPlace: Int): Boolean {
+        val mask = (2.0).pow(binaryPlace).toUInt() - 1u
+        return (primary and mask) + (secondary and mask) > mask
+    }
+
+    private fun carryFrom(primary: UByte, secondary: UByte, binaryPlace: Int): Boolean {
+        return carryFrom(primary.toUInt(), secondary.toUInt(), binaryPlace)
+    }
+
+    private fun carryFrom(primary: UInt, secondary: UInt, tertiary: UInt, binaryPlace: Int): Boolean {
+        val mask = (2.0).pow(binaryPlace).toUInt() - 1u
+        return (primary and mask) + (secondary and mask) + (tertiary and mask) > mask
+    }
+
+    private fun carryFrom(primary: UByte, secondary: UByte, tertiary: UByte, binaryPlace: Int): Boolean {
+        return carryFrom(primary.toUInt(), secondary.toUInt(), tertiary.toUInt(), binaryPlace)
+    }
+
     private fun setFlag(value: Boolean, flag: Flag) {
         val changeMask = if(value) 1u shl flag.bitIndex else 0u
         val bitMask = 1u.inv().rotateLeft(flag.bitIndex)
@@ -335,6 +417,14 @@ class GBProcessor {
         flagValue = flagValue.and(bitMask).or(changeMask)
 
         registers[ByteRegister.FLAG.index] = flagValue.toUByte()
+    }
+
+    private fun getFlag(flag: Flag): Boolean {
+        return (registers[ByteRegister.FLAG.index] shr flag.bitIndex) == 1u.toUByte()
+    }
+
+    private fun getCarryBit(): UByte {
+        return (if (getFlag(Flag.C)) 1u else 0u).toUByte()
     }
 
 
