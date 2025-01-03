@@ -360,6 +360,7 @@ class GBProcessor {
         return Pair(1,2)
     }
 
+    // Add the byte n8 and carry bit to register A
     fun ADC_A_n8(): Pair<Int,Int> {
         val carryBit = getCarryBit()
         val immediateValue = memory[programCounter + 1u]
@@ -376,6 +377,7 @@ class GBProcessor {
         return Pair(2,2)
     }
 
+    // Add the value in r8 to register A
     fun ADD_A_r8(sourceRegister: ByteRegister): Pair<Int,Int> {
         val registerByte = registers[sourceRegister.index]
         val aByte = registers[ByteRegister.A.index]
@@ -385,10 +387,45 @@ class GBProcessor {
 
         setFlag(sum == 0u, Flag.Z)
         setFlag(false, Flag.N)
-        setFlag(carryFrom(registerByte,aByte,0xF), Flag.N)
+        setFlag(carryFrom(registerByte,aByte,0xF), Flag.H)
         setFlag(carryFrom(registerByte,aByte,0xFF), Flag.C)
 
         return Pair(1,1)
+    }
+
+    // Add the byte at the address in HL to register A
+    fun ADD_A_HL(): Pair<Int,Int> {
+        val upperAddressByte = registers[ShortRegister.HL.highIndex]
+        val lowerAddressByte = registers[ShortRegister.HL.lowIndex]
+        val address = Pair(upperAddressByte, lowerAddressByte).toUShort()
+
+        val byteValue = memory[address]
+        val registerValue = registers[ByteRegister.A.index]
+        val sum = byteValue + registerValue
+
+        registers[ByteRegister.A.index] = sum.toUByte()
+
+        setFlag(sum == 0u, Flag.Z)
+        setFlag(false, Flag.N)
+        setFlag(carryFrom(byteValue, registerValue, 0xF),Flag.H)
+        setFlag(carryFrom(byteValue, registerValue, 0xFF), Flag.C)
+
+        return Pair(1,2)
+    }
+
+    fun ADD_A_n8(): Pair<Int,Int> {
+        val immediateValue = memory[programCounter + 1u]
+        val registerValue = registers[ByteRegister.A.index]
+        val sum = immediateValue + registerValue
+
+        registers[ByteRegister.A.index] = sum.toUByte()
+
+        setFlag(sum == 0u, Flag.Z)
+        setFlag(false, Flag.N)
+        setFlag(carryFrom(immediateValue, registerValue, 0xF), Flag.H)
+        setFlag(carryFrom(immediateValue,registerValue,0xFF), Flag.C)
+
+        return Pair(2,2)
     }
 
     private fun carryFrom(primary: UInt, secondary: UInt, binaryPlace: Int): Boolean {
