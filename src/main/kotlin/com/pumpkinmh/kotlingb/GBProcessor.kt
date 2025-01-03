@@ -413,6 +413,7 @@ class GBProcessor {
         return Pair(1,2)
     }
 
+    // Add the value n8 into register A
     fun ADD_A_n8(): Pair<Int,Int> {
         val immediateValue = memory[programCounter + 1u]
         val registerValue = registers[ByteRegister.A.index]
@@ -426,6 +427,60 @@ class GBProcessor {
         setFlag(carryFrom(immediateValue,registerValue,0xFF), Flag.C)
 
         return Pair(2,2)
+    }
+
+    // Add the value in r16 to register HL
+    fun ADD_HL_r16(sourceRegister: ShortRegister): Pair<Int,Int> {
+        val lowerRegister = registers[sourceRegister.lowIndex]
+        val upperRegister = registers[sourceRegister.highIndex]
+        val registerShort = Pair(upperRegister,lowerRegister).toUShort()
+
+        val lowerHL = registers[ShortRegister.HL.lowIndex]
+        val upperHL = registers[ShortRegister.HL.highIndex]
+        val hlShort = Pair(upperHL, lowerHL).toUShort()
+
+        val sum = registerShort + hlShort
+        registers[ShortRegister.HL.lowIndex] = sum.toUShort().toBytePair().second
+        registers[ShortRegister.HL.highIndex] = sum.toUShort().toBytePair().first
+
+        // NO Z
+        setFlag(false, Flag.N)
+        setFlag(carryFrom(registerShort.toUInt(), hlShort.toUInt(), 0xFFF), Flag.H)
+        setFlag(carryFrom(registerShort.toUInt(), hlShort.toUInt(), 0xFFFF), Flag.C)
+
+        return Pair(1,2)
+    }
+
+    fun ADD_HL_SP(): Pair<Int,Int> {
+        val lowerHL = registers[ShortRegister.HL.lowIndex]
+        val upperHL = registers[ShortRegister.HL.highIndex]
+        val hlShort = Pair(upperHL, lowerHL).toUShort()
+
+        val sum = stackPointer + hlShort
+        registers[ShortRegister.HL.lowIndex] = sum.toUShort().toBytePair().second
+        registers[ShortRegister.HL.highIndex] = sum.toUShort().toBytePair().first
+
+        // NO Z
+        setFlag(false, Flag.N)
+        setFlag(carryFrom(stackPointer.toUInt(), hlShort.toUInt(), 0xFFF), Flag.H)
+        setFlag(carryFrom(stackPointer.toUInt(), hlShort.toUInt(), 0xFFFF), Flag.C)
+
+        return Pair(1,2)
+    }
+
+    fun ADD_SP_e8(): Pair<Int,Int> {
+        val signedByte: Byte = memory[programCounter + 1u].toByte()
+
+        val sum = stackPointer.toInt() + signedByte
+
+        stackPointer = sum.toUShort()
+
+        setFlag(false, Flag.Z)
+        setFlag(false, Flag.N)
+        setFlag(carryFrom(signedByte.toUInt(), stackPointer.toUInt(), 0xF), Flag.H)
+        setFlag(carryFrom(signedByte.toUInt(), stackPointer.toUInt(), 0xFF), Flag.C)
+
+        return Pair(2,4)
     }
 
     private fun carryFrom(primary: UInt, secondary: UInt, binaryPlace: Int): Boolean {
