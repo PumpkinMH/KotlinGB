@@ -26,6 +26,14 @@ class GBProcessor {
         }
     }
 
+    enum class Flag(val bitIndex: Int) {
+        Z(7),
+        N(6),
+        H(5),
+        C(4)
+
+    }
+
     val registers: UByteArray = UByteArray(8)
 
     var stackPointer: UShort = TODO()
@@ -295,12 +303,17 @@ class GBProcessor {
     // Add e8 to the stack pointer register and copy the result to register HL
     fun LD_HL_SPe8(): Pair<Int,Int> {
         val signedByte: Byte = memory[programCounter + 1u].toByte()
+        val oldLowerByte = stackPointer.toBytePair().second
         stackPointer = (stackPointer.toInt() + signedByte.toInt()).toUShort()
 
         registers[ShortRegister.HL.highIndex] = stackPointer.toBytePair().first
         registers[ShortRegister.HL.lowIndex] = stackPointer.toBytePair().second
 
-        TODO("Flag operations are not yet implemented")
+        setFlag(false, Flag.Z)
+        setFlag(false, Flag.N)
+        setFlag((oldLowerByte.toInt() + (signedByte.toInt() and 0xF)) > 0xF,Flag.H)
+        setFlag((oldLowerByte.toInt() + (signedByte.toInt() and 0xFF)) > 0xFF,Flag.H)
+
         return Pair(2,3)
     }
 
@@ -312,6 +325,16 @@ class GBProcessor {
         stackPointer = Pair(upperByte, lowerByte).toUShort()
 
         return Pair(1,2)
+    }
+
+    private fun setFlag(value: Boolean, flag: Flag) {
+        val changeMask = if(value) 1u shl flag.bitIndex else 0u
+        val bitMask = 1u.inv().rotateLeft(flag.bitIndex)
+
+        var flagValue = registers[ByteRegister.FLAG.index].toUInt()
+        flagValue = flagValue.and(bitMask).or(changeMask)
+
+        registers[ByteRegister.FLAG.index] = flagValue.toUByte()
     }
 
 
