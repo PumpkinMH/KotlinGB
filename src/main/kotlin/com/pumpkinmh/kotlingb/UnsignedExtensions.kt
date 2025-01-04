@@ -28,7 +28,7 @@ infix fun UShort.shl(shiftValue: Int): UShort {
     return intConversion.toUShort()
 }
 
-fun UShort.toBytePair(): Pair<UByte,UByte> {
+fun UShort.toUBytePair(): Pair<UByte,UByte> {
     val upperByte: UByte = this.and(0xFF00u).shr(8).toUByte()
     val lowerByte: UByte = this.and(0xFFu).toUByte()
 
