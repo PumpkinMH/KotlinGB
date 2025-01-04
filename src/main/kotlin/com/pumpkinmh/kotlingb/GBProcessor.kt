@@ -1,5 +1,6 @@
 package com.pumpkinmh.kotlingb
 
+import kotlin.math.min
 import kotlin.math.pow
 
 @OptIn(ExperimentalUnsignedTypes::class)
@@ -578,6 +579,98 @@ class GBProcessor {
         setFlag(carryFrom(oldValue, 1u, 4), Flag.H)
 
         return Pair(1,3)
+    }
+
+    fun SBC_A_r8(sourceRegister: ByteRegister): Pair<Int,Int> {
+        val minuend = registers[ByteRegister.A.index]
+        val subtrahend = registers[sourceRegister.index] + getCarryBit()
+        val result = minuend - subtrahend
+        registers[ByteRegister.A.index] = result.toUByte()
+
+        setFlag(result == 0u, Flag.Z)
+        setFlag(true, Flag.N)
+        setFlag(borrowFrom(minuend.toUInt(),subtrahend,4), Flag.H)
+        setFlag(subtrahend > minuend, Flag.C)
+
+        return Pair(1,1)
+    }
+
+    fun SBC_A_HL(): Pair<Int, Int> {
+        val upperAddress = registers[ShortRegister.HL.highIndex]
+        val lowerAddress = registers[ShortRegister.HL.lowIndex]
+        val byteAddress = Pair(upperAddress,lowerAddress).toUShort()
+
+        val minuend = registers[ByteRegister.A.index]
+        val subtrahend = memory[byteAddress] + getCarryBit()
+        val result = minuend - subtrahend
+        registers[ByteRegister.A.index] = result.toUByte()
+
+        setFlag(result == 0u, Flag.Z)
+        setFlag(true, Flag.N)
+        setFlag(borrowFrom(minuend.toUInt(),subtrahend,4), Flag.H)
+        setFlag(subtrahend > minuend, Flag.C)
+
+        return Pair(1,2)
+    }
+
+    fun SBC_A_n8(): Pair<Int,Int> {
+        val minuend = registers[ByteRegister.A.index]
+        val subtrahend = memory[programCounter + 1u] + getCarryBit()
+        val result = minuend - subtrahend
+        registers[ByteRegister.A.index] = result.toUByte()
+
+        setFlag(result == 0u, Flag.Z)
+        setFlag(true, Flag.N)
+        setFlag(borrowFrom(minuend.toUInt(),subtrahend,4), Flag.H)
+        setFlag(subtrahend > minuend, Flag.C)
+
+        return Pair(2,2)
+    }
+
+    fun SUB_A_r8(sourceRegister: ByteRegister): Pair<Int,Int> {
+        val minuend = registers[ByteRegister.A.index]
+        val subtrahend = registers[sourceRegister.index]
+        val result = minuend - subtrahend
+        registers[ByteRegister.A.index] = result.toUByte()
+
+        setFlag(result == 0u, Flag.Z)
+        setFlag(true, Flag.N)
+        setFlag(borrowFrom(minuend, subtrahend, 4), Flag.H)
+        setFlag(subtrahend > minuend, Flag.C)
+
+        return Pair(1,1)
+    }
+
+    fun SUB_A_HL(): Pair<Int,Int> {
+        val upperAddress = registers[ShortRegister.HL.highIndex]
+        val lowerAddress = registers[ShortRegister.HL.lowIndex]
+        val byteAddress = Pair(upperAddress,lowerAddress).toUShort()
+
+        val minuend = registers[ByteRegister.A.index]
+        val subtrahend = memory[byteAddress]
+        val result = minuend - subtrahend
+        registers[ByteRegister.A.index] = result.toUByte()
+
+        setFlag(result == 0u, Flag.Z)
+        setFlag(true, Flag.N)
+        setFlag(borrowFrom(minuend, subtrahend, 4), Flag.H)
+        setFlag(subtrahend > minuend, Flag.C)
+
+        return Pair(1,2)
+    }
+
+    fun SUB_A_n8(): Pair<Int,Int> {
+        val minuend = registers[ByteRegister.A.index]
+        val subtrahend = memory[programCounter + 1u]
+        val result = minuend - subtrahend
+        registers[ByteRegister.A.index] = result.toUByte()
+
+        setFlag(result == 0u, Flag.Z)
+        setFlag(true, Flag.N)
+        setFlag(borrowFrom(minuend, subtrahend, 4), Flag.H)
+        setFlag(subtrahend > minuend, Flag.C)
+
+        return Pair(2,2)
     }
 
     private fun carryFrom(primary: UInt, secondary: UInt, binaryPlace: Int): Boolean {
