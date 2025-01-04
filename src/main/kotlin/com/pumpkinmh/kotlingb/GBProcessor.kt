@@ -1,6 +1,5 @@
 package com.pumpkinmh.kotlingb
 
-import kotlin.math.min
 import kotlin.math.pow
 
 @OptIn(ExperimentalUnsignedTypes::class)
@@ -223,8 +222,8 @@ class GBProcessor {
 
         memory[byteAddress++] = sourceByte
 
-        registers[ShortRegister.HL.highIndex] = byteAddress.toBytePair().first
-        registers[ShortRegister.HL.lowIndex] = byteAddress.toBytePair().second
+        registers[ShortRegister.HL.highIndex] = byteAddress.toUBytePair().first
+        registers[ShortRegister.HL.lowIndex] = byteAddress.toUBytePair().second
 
         return Pair(1,2)
     }
@@ -239,8 +238,8 @@ class GBProcessor {
 
         memory[byteAddress--] = sourceByte
 
-        registers[ShortRegister.HL.highIndex] = byteAddress.toBytePair().first
-        registers[ShortRegister.HL.lowIndex] = byteAddress.toBytePair().second
+        registers[ShortRegister.HL.highIndex] = byteAddress.toUBytePair().first
+        registers[ShortRegister.HL.lowIndex] = byteAddress.toUBytePair().second
 
         return Pair(1,2)
     }
@@ -255,8 +254,8 @@ class GBProcessor {
 
         registers[ByteRegister.A.index] = sourceByte
 
-        registers[ShortRegister.HL.highIndex] = byteAddress.toBytePair().first
-        registers[ShortRegister.HL.lowIndex] = byteAddress.toBytePair().second
+        registers[ShortRegister.HL.highIndex] = byteAddress.toUBytePair().first
+        registers[ShortRegister.HL.lowIndex] = byteAddress.toUBytePair().second
 
         return Pair(1,2)
     }
@@ -271,8 +270,8 @@ class GBProcessor {
 
         registers[ByteRegister.A.index] = sourceByte
 
-        registers[ShortRegister.HL.highIndex] = byteAddress.toBytePair().first
-        registers[ShortRegister.HL.lowIndex] = byteAddress.toBytePair().second
+        registers[ShortRegister.HL.highIndex] = byteAddress.toUBytePair().first
+        registers[ShortRegister.HL.lowIndex] = byteAddress.toUBytePair().second
 
         return Pair(1,2)
     }
@@ -294,8 +293,8 @@ class GBProcessor {
         val upperByte = memory[programCounter + 2u]
         val addressShort = Pair(upperByte,lowerByte).toUShort()
 
-        memory[addressShort] = stackPointer.toBytePair().second
-        memory[addressShort + 1u] = stackPointer.toBytePair().first
+        memory[addressShort] = stackPointer.toUBytePair().second
+        memory[addressShort + 1u] = stackPointer.toUBytePair().first
 
         return Pair(3,5)
     }
@@ -303,11 +302,11 @@ class GBProcessor {
     // Add e8 to the stack pointer register and copy the result to register HL
     fun LD_HL_SPe8(): Pair<Int,Int> {
         val signedByte: Byte = memory[programCounter + 1u].toByte()
-        val oldLowerByte = stackPointer.toBytePair().second
+        val oldLowerByte = stackPointer.toUBytePair().second
         stackPointer = (stackPointer.toInt() + signedByte.toInt()).toUShort()
 
-        registers[ShortRegister.HL.highIndex] = stackPointer.toBytePair().first
-        registers[ShortRegister.HL.lowIndex] = stackPointer.toBytePair().second
+        registers[ShortRegister.HL.highIndex] = stackPointer.toUBytePair().first
+        registers[ShortRegister.HL.lowIndex] = stackPointer.toUBytePair().second
 
         setFlag(false, Flag.Z)
         setFlag(false, Flag.N)
@@ -439,8 +438,8 @@ class GBProcessor {
         val hlShort = Pair(upperHL, lowerHL).toUShort()
 
         val sum = registerShort + hlShort
-        registers[ShortRegister.HL.lowIndex] = sum.toUShort().toBytePair().second
-        registers[ShortRegister.HL.highIndex] = sum.toUShort().toBytePair().first
+        registers[ShortRegister.HL.lowIndex] = sum.toUShort().toUBytePair().second
+        registers[ShortRegister.HL.highIndex] = sum.toUShort().toUBytePair().first
 
         // NO Z
         setFlag(false, Flag.N)
@@ -456,8 +455,8 @@ class GBProcessor {
         val hlShort = Pair(upperHL, lowerHL).toUShort()
 
         val sum = stackPointer + hlShort
-        registers[ShortRegister.HL.lowIndex] = sum.toUShort().toBytePair().second
-        registers[ShortRegister.HL.highIndex] = sum.toUShort().toBytePair().first
+        registers[ShortRegister.HL.lowIndex] = sum.toUShort().toUBytePair().second
+        registers[ShortRegister.HL.highIndex] = sum.toUShort().toUBytePair().first
 
         // NO Z
         setFlag(false, Flag.N)
@@ -671,6 +670,36 @@ class GBProcessor {
         setFlag(subtrahend > minuend, Flag.C)
 
         return Pair(2,2)
+    }
+
+    fun DEC_r16(sourceRegister: ShortRegister): Pair<Int,Int> {
+        val upperByte = registers[sourceRegister.highIndex]
+        val lowerByte = registers[sourceRegister.lowIndex]
+
+        var registerValue = Pair(upperByte,lowerByte).toUShort()
+        registerValue = (registerValue - 1u).toUShort()
+
+        registers[sourceRegister.highIndex] = registerValue.toUBytePair().first
+        registers[sourceRegister.lowIndex] = registerValue.toUBytePair().second
+
+        return Pair(1,2)
+    }
+
+    fun INC_r16(sourceRegister: ShortRegister): Pair<Int,Int> {
+        val upperByte = registers[sourceRegister.highIndex]
+        val lowerByte = registers[sourceRegister.lowIndex]
+
+        var registerValue = Pair(upperByte,lowerByte).toUShort()
+        registerValue = (registerValue + 1u).toUShort()
+
+        registers[sourceRegister.highIndex] = registerValue.toUBytePair().first
+        registers[sourceRegister.lowIndex] = registerValue.toUBytePair().second
+
+        return Pair(1,2)
+    }
+
+    private fun executeOpcode() {
+
     }
 
     private fun carryFrom(primary: UInt, secondary: UInt, binaryPlace: Int): Boolean {

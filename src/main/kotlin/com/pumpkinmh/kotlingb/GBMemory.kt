@@ -1,7 +1,5 @@
 package com.pumpkinmh.kotlingb
 
-import java.util.Random
-
 @OptIn(ExperimentalUnsignedTypes::class)
 class GBMemory(internal val cartridge: GBCartridge) {
     companion object {
@@ -118,7 +116,7 @@ class GBMemory(internal val cartridge: GBCartridge) {
     }
 
     internal operator fun set(lowerAddress: Int, upperAddress: Int, data: UShort) {
-        val bytePair = data.toBytePair()
+        val bytePair = data.toUBytePair()
         val leastSignifcantByte: UByte = bytePair.second
         val mostSignificantByte:UByte = bytePair.first
 
