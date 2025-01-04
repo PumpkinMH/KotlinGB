@@ -1,7 +1,6 @@
 package com.pumpkinmh.kotlingb
 
 import kotlin.math.pow
-import kotlin.math.sign
 
 @OptIn(ExperimentalUnsignedTypes::class)
 class GBProcessor {
@@ -32,7 +31,6 @@ class GBProcessor {
         N(6),
         H(5),
         C(4)
-
     }
 
     val registers: UByteArray = UByteArray(8)
@@ -312,8 +310,8 @@ class GBProcessor {
 
         setFlag(false, Flag.Z)
         setFlag(false, Flag.N)
-        setFlag(carryFrom(oldLowerByte.toUInt(), signedByte.toUInt(), 0xF), Flag.H)
-        setFlag(carryFrom(oldLowerByte.toUInt(), signedByte.toUInt(), 0xFF),Flag.C)
+        setFlag(carryFrom(oldLowerByte.toUInt(), signedByte.toUInt(), 4), Flag.H)
+        setFlag(carryFrom(oldLowerByte.toUInt(), signedByte.toUInt(), 8),Flag.C)
 
         return Pair(2,3)
     }
@@ -336,8 +334,8 @@ class GBProcessor {
 
         setFlag(result.toUInt() == 0u, Flag.Z)
         setFlag(false, Flag.N)
-        setFlag(carryFrom(registers[ByteRegister.A.index], registers[sourceRegister.index], carry, 0xF), Flag.H)
-        setFlag(carryFrom(registers[ByteRegister.A.index],registers[sourceRegister.index], carry, 0xFF), Flag.C)
+        setFlag(carryFrom(registers[ByteRegister.A.index], registers[sourceRegister.index], carry, 4), Flag.H)
+        setFlag(carryFrom(registers[ByteRegister.A.index],registers[sourceRegister.index], carry, 8), Flag.C)
 
         return Pair(1,1)
     }
@@ -354,8 +352,8 @@ class GBProcessor {
 
         setFlag(sum.toUInt() == 0u, Flag.Z)
         setFlag(false, Flag.N)
-        setFlag(carryFrom(memory[byteAddress], carry, 0xF), Flag.H)
-        setFlag(carryFrom(memory[byteAddress], carry, 0xFF), Flag.C)
+        setFlag(carryFrom(memory[byteAddress], carry, 4), Flag.H)
+        setFlag(carryFrom(memory[byteAddress], carry, 8), Flag.C)
 
         return Pair(1,2)
     }
@@ -371,8 +369,8 @@ class GBProcessor {
 
         setFlag(sum == 0u, Flag.Z)
         setFlag(false, Flag.N)
-        setFlag(carryFrom(carryBit, immediateValue, registerValue,0xF), Flag.H)
-        setFlag(carryFrom(carryBit, immediateValue, registerValue, 0xFF), Flag.C)
+        setFlag(carryFrom(carryBit, immediateValue, registerValue,4), Flag.H)
+        setFlag(carryFrom(carryBit, immediateValue, registerValue, 8), Flag.C)
 
         return Pair(2,2)
     }
@@ -387,8 +385,8 @@ class GBProcessor {
 
         setFlag(sum == 0u, Flag.Z)
         setFlag(false, Flag.N)
-        setFlag(carryFrom(registerByte,aByte,0xF), Flag.H)
-        setFlag(carryFrom(registerByte,aByte,0xFF), Flag.C)
+        setFlag(carryFrom(registerByte,aByte,4), Flag.H)
+        setFlag(carryFrom(registerByte,aByte,8), Flag.C)
 
         return Pair(1,1)
     }
@@ -407,8 +405,8 @@ class GBProcessor {
 
         setFlag(sum == 0u, Flag.Z)
         setFlag(false, Flag.N)
-        setFlag(carryFrom(byteValue, registerValue, 0xF),Flag.H)
-        setFlag(carryFrom(byteValue, registerValue, 0xFF), Flag.C)
+        setFlag(carryFrom(byteValue, registerValue, 4),Flag.H)
+        setFlag(carryFrom(byteValue, registerValue, 8), Flag.C)
 
         return Pair(1,2)
     }
@@ -423,8 +421,8 @@ class GBProcessor {
 
         setFlag(sum == 0u, Flag.Z)
         setFlag(false, Flag.N)
-        setFlag(carryFrom(immediateValue, registerValue, 0xF), Flag.H)
-        setFlag(carryFrom(immediateValue,registerValue,0xFF), Flag.C)
+        setFlag(carryFrom(immediateValue, registerValue, 4), Flag.H)
+        setFlag(carryFrom(immediateValue,registerValue,8), Flag.C)
 
         return Pair(2,2)
     }
@@ -445,8 +443,8 @@ class GBProcessor {
 
         // NO Z
         setFlag(false, Flag.N)
-        setFlag(carryFrom(registerShort.toUInt(), hlShort.toUInt(), 0xFFF), Flag.H)
-        setFlag(carryFrom(registerShort.toUInt(), hlShort.toUInt(), 0xFFFF), Flag.C)
+        setFlag(carryFrom(registerShort.toUInt(), hlShort.toUInt(), 12), Flag.H)
+        setFlag(carryFrom(registerShort.toUInt(), hlShort.toUInt(), 16), Flag.C)
 
         return Pair(1,2)
     }
@@ -462,8 +460,8 @@ class GBProcessor {
 
         // NO Z
         setFlag(false, Flag.N)
-        setFlag(carryFrom(stackPointer.toUInt(), hlShort.toUInt(), 0xFFF), Flag.H)
-        setFlag(carryFrom(stackPointer.toUInt(), hlShort.toUInt(), 0xFFFF), Flag.C)
+        setFlag(carryFrom(stackPointer.toUInt(), hlShort.toUInt(), 12), Flag.H)
+        setFlag(carryFrom(stackPointer.toUInt(), hlShort.toUInt(), 16), Flag.C)
 
         return Pair(1,2)
     }
@@ -477,10 +475,109 @@ class GBProcessor {
 
         setFlag(false, Flag.Z)
         setFlag(false, Flag.N)
-        setFlag(carryFrom(signedByte.toUInt(), stackPointer.toUInt(), 0xF), Flag.H)
-        setFlag(carryFrom(signedByte.toUInt(), stackPointer.toUInt(), 0xFF), Flag.C)
+        setFlag(carryFrom(signedByte.toUInt(), stackPointer.toUInt(), 4), Flag.H)
+        setFlag(carryFrom(signedByte.toUInt(), stackPointer.toUInt(), 8), Flag.C)
 
         return Pair(2,4)
+    }
+
+    fun CP_A_r8(sourceRegister: ByteRegister): Pair<Int,Int> {
+        val registerValue = registers[ByteRegister.A.index]
+        val sourceValue = registers[sourceRegister.index]
+        val result = registerValue - sourceValue
+
+        setFlag(result == 0u, Flag.Z)
+        setFlag(true, Flag.N)
+        setFlag(borrowFrom(registerValue, sourceValue, 4), Flag.H)
+        setFlag(sourceValue > registerValue, Flag.C)
+
+        return Pair(1,1)
+    }
+
+    fun CP_A_HL(): Pair<Int,Int> {
+        val upperAddress = registers[ShortRegister.HL.highIndex]
+        val lowerAddress = registers[ShortRegister.HL.lowIndex]
+        val byteAddress = Pair(upperAddress, lowerAddress).toUShort()
+
+        val pointedByte = memory[byteAddress]
+        val registerByte = registers[ByteRegister.A.index]
+        val result = registerByte - pointedByte
+
+        setFlag(result == 0u, Flag.Z)
+        setFlag(true, Flag.N)
+        setFlag(borrowFrom(registerByte,pointedByte,4), Flag.H)
+        setFlag(pointedByte > registerByte, Flag.C)
+
+        return Pair(1,2)
+    }
+
+    fun CP_A_n8(): Pair<Int, Int> {
+        val immediateByte = memory[programCounter + 1u]
+        val registerByte = registers[ByteRegister.A.index]
+        val result = registerByte - immediateByte
+
+        setFlag(result == 0u, Flag.Z)
+        setFlag(true, Flag.N)
+        setFlag(borrowFrom(registerByte, immediateByte, 4), Flag.H)
+        setFlag(immediateByte > registerByte, Flag.C)
+
+        return Pair(2,2)
+    }
+
+    fun DEC_r8(sourceRegister: ByteRegister): Pair<Int,Int> {
+        val oldValue = registers[sourceRegister.index]
+        val result = oldValue- 1u
+        registers[sourceRegister.index] = result.toUByte()
+
+        setFlag(result == 0u, Flag.Z)
+        setFlag(true, Flag.N)
+        setFlag(borrowFrom(oldValue, 1u, 4), Flag.H)
+
+        return Pair(1,1)
+    }
+
+    fun DEC_HL(): Pair<Int,Int> {
+        val upperAddress = registers[ShortRegister.HL.highIndex]
+        val lowerAddress = registers[ShortRegister.HL.lowIndex]
+        val byteAddress = Pair(upperAddress,lowerAddress).toUShort()
+
+        val oldValue = memory[byteAddress]
+        val result = oldValue - 1u
+        memory[byteAddress] = result.toUByte()
+
+        setFlag(result == 0u, Flag.Z)
+        setFlag(true, Flag.N)
+        setFlag(borrowFrom(oldValue, 1u, 4), Flag.H)
+
+        return Pair(1,3)
+    }
+
+    fun INC_r8(sourceRegister: ByteRegister): Pair<Int,Int> {
+        val oldValue = registers[sourceRegister.index]
+        val result = oldValue + 1u
+        registers[sourceRegister.index] = result.toUByte()
+
+        setFlag(result == 0u, Flag.Z)
+        setFlag(false, Flag.N)
+        setFlag(carryFrom(oldValue, 1u, 4), Flag.H)
+
+        return Pair(1,1)
+    }
+
+    fun INC_HL(): Pair<Int,Int> {
+        val upperAddress = registers[ShortRegister.HL.highIndex]
+        val lowerAddress = registers[ShortRegister.HL.lowIndex]
+        val byteAddress = Pair(upperAddress,lowerAddress).toUShort()
+
+        val oldValue = memory[byteAddress]
+        val result = oldValue + 1u
+        memory[byteAddress] = result.toUByte()
+
+        setFlag(result == 0u, Flag.Z)
+        setFlag(false, Flag.N)
+        setFlag(carryFrom(oldValue, 1u, 4), Flag.H)
+
+        return Pair(1,3)
     }
 
     private fun carryFrom(primary: UInt, secondary: UInt, binaryPlace: Int): Boolean {
@@ -499,6 +596,15 @@ class GBProcessor {
 
     private fun carryFrom(primary: UByte, secondary: UByte, tertiary: UByte, binaryPlace: Int): Boolean {
         return carryFrom(primary.toUInt(), secondary.toUInt(), tertiary.toUInt(), binaryPlace)
+    }
+
+    private fun borrowFrom(minuend: UByte, subtrahend: UByte, binaryPlace: Int): Boolean {
+        return borrowFrom(minuend.toUInt(), subtrahend.toUInt(), binaryPlace)
+    }
+
+    private fun borrowFrom(minuend: UInt, subtrahend: UInt, binaryPlace: Int): Boolean {
+        val mask = (2.0).pow(binaryPlace).toUInt() - 1u
+        return (minuend and mask) < (subtrahend and mask)
     }
 
     private fun setFlag(value: Boolean, flag: Flag) {
