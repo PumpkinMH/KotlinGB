@@ -1,7 +1,9 @@
 package com.pumpkinmh.kotlingb
 
+import java.util.Random
+
 @OptIn(ExperimentalUnsignedTypes::class)
-class GBMemory {
+class GBMemory(internal val cartridge: GBCartridge) {
     companion object {
         const val ROM_BANK_FIXED_START = 0x0000
         const val ROM_BANK_FIXED_END = 0x3FFF
@@ -39,10 +41,18 @@ class GBMemory {
         const val IE_REGISTER_START_END = 0xFFFF
     }
 
-    internal val workRAM: UByteArray = TODO()
-    internal val highRAM: UByteArray = TODO()
+    internal val workRAM: UByteArray = UByteArray(WORK_RAM_DYNAMIC_END - WORK_RAM_FIXED_START)
+    internal val highRAM: UByteArray = UByteArray(HIGH_RAM_END - HIGH_RAM_START)
 
-    internal val cartridge: GBCartridge = TODO()
+    init {
+        for(i in workRAM.indices) {
+            workRAM[i] = (0x00..0xFF).random().toUByte()
+        }
+
+        for(i in highRAM.indices) {
+            highRAM[i] = (0x00..0xFF).random().toUByte()
+        }
+    }
 
     internal operator fun get(address: Int): UByte {
         if(address > 0xFFFF) {
