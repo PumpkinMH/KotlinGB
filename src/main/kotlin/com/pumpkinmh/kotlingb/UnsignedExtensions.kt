@@ -41,3 +41,14 @@ fun Pair<UByte,UByte>.toUShort(): UShort {
 
     return upperByte or lowerByte
 }
+
+operator fun UByte.get(indexFromLSB: Int): Boolean {
+    return this.shr(indexFromLSB).takeLowestOneBit().toUInt() == 1u
+}
+
+fun UByte.setBit(index: Int, value: Boolean): UByte {
+    val changeMask = if(value) 1u shl index else 0u
+    val bitMask = 1u.inv().rotateLeft(index)
+
+    return this.and(bitMask.toUByte()).or(changeMask.toUByte())
+}

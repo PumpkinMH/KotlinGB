@@ -788,6 +788,61 @@ class GBProcessor {
         return Pair(2,2)
     }
 
+    fun BIT_u3_source(value: UByte) {
+        val bitIndex = getFromImmediate()
+        val setZero = value[bitIndex.toInt()]
+
+        setFlag(setZero, Flag.Z)
+        setFlag(false, Flag.N)
+        setFlag(true, Flag.H)
+    }
+
+    fun BIT_u3_r8(source: ByteRegister): Pair<Int,Int> {
+        BIT_u3_source(getFromRegister(source))
+
+        return Pair(2,2)
+    }
+
+    fun BIT_u3_HL(): Pair<Int,Int> {
+        BIT_u3_source(getFromAddressInHL())
+
+        return Pair(2,3)
+    }
+
+    fun RES_u3_source(value: UByte): UByte {
+        val bitIndex = getFromImmediate()
+        return value.setBit(bitIndex.toInt(), false)
+    }
+
+    fun RES_u3_r8(register: ByteRegister): Pair<Int,Int> {
+        registers[register.index] = RES_u3_source(registers[register.index])
+
+        return Pair(2,2)
+    }
+
+    fun RES_u3_HL(): Pair<Int,Int> {
+        setToAddressInHL(RES_u3_source(getFromAddressInHL()))
+
+        return Pair(2,4)
+    }
+
+    fun SET_u3_source(value: UByte): UByte {
+        val bitIndex = getFromImmediate()
+        return value.setBit(bitIndex.toInt(), true)
+    }
+
+    fun SET_u3_r8(register: ByteRegister): Pair<Int, Int> {
+        setToRegister(SET_u3_source(getFromRegister(register)), register)
+
+        return Pair(2,2)
+    }
+
+    fun SET_u3_HL(): Pair<Int, Int> {
+        setToAddressInHL(SET_u3_source(getFromAddressInHL()))
+
+        return Pair(2,4)
+    }
+
     private fun executeOpcode() {
 
     }
@@ -830,7 +885,7 @@ class GBProcessor {
     }
 
     private fun getFlag(flag: Flag): Boolean {
-        return (registers[ByteRegister.FLAG.index] shr flag.bitIndex) == 1u.toUByte()
+        return ((registers[ByteRegister.FLAG.index] shr flag.bitIndex).takeLowestOneBit()) == 1u.toUByte()
     }
 
     private fun getCarryBit(): UByte {
