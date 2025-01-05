@@ -698,6 +698,96 @@ class GBProcessor {
         return Pair(1,2)
     }
 
+    fun AND_A_source(value: UByte) {
+        registers[ByteRegister.A.index] = registers[ByteRegister.A.index] and value
+
+        setFlag(registers[ByteRegister.A.index].toUInt() == 0u, Flag.Z)
+        setFlag(false, Flag.N)
+        setFlag(true, Flag.H)
+        setFlag(false, Flag.C)
+    }
+
+    fun AND_A_r8(source: ByteRegister): Pair<Int,Int> {
+        AND_A_source(getFromRegister(source))
+
+        return Pair(1,1)
+    }
+
+    fun AND_A_HL(): Pair<Int,Int> {
+        AND_A_source(getFromAddressInHL())
+
+        return Pair(1,2)
+    }
+
+    fun AND_A_n8(): Pair<Int,Int> {
+        AND_A_source(getFromImmediate())
+
+        return Pair(2,2)
+    }
+
+    fun CPL(): Pair<Int,Int> {
+        registers[ByteRegister.A.index] = registers[ByteRegister.A.index].inv()
+
+        setFlag(true, Flag.N)
+        setFlag(true, Flag.H)
+
+        return Pair(1,1)
+    }
+
+    fun OR_A_source(value: UByte) {
+        registers[ByteRegister.A.index] = registers[ByteRegister.A.index].or(value)
+
+        setFlag(registers[ByteRegister.A.index].toUInt() == 0u, Flag.Z)
+        setFlag(false, Flag.N)
+        setFlag(false,Flag.H)
+        setFlag(false, Flag.C)
+    }
+
+    fun OR_A_r8(source: ByteRegister): Pair<Int,Int> {
+        OR_A_source(registers[source.index])
+
+        return Pair(1,1)
+    }
+
+    fun OR_A_HL(): Pair<Int,Int> {
+        OR_A_source(getFromAddressInHL())
+
+        return Pair(1,2)
+    }
+
+    fun OR_A_n8(): Pair<Int,Int> {
+        OR_A_source(getFromImmediate())
+
+        return Pair(2,2)
+    }
+
+    fun XOR_A_source(value: UByte) {
+        registers[ByteRegister.A.index] = registers[ByteRegister.A.index].xor(value)
+
+        setFlag(registers[ByteRegister.A.index].toUInt() == 0u, Flag.Z)
+        setFlag(false, Flag.N)
+        setFlag(false,Flag.H)
+        setFlag(false, Flag.C)
+    }
+
+    fun XOR_A_r8(source: ByteRegister): Pair<Int, Int> {
+        XOR_A_source(registers[source.index])
+
+        return Pair(1,1)
+    }
+
+    fun XOR_A_HL(): Pair<Int, Int> {
+        XOR_A_source(getFromAddressInHL())
+
+        return Pair(1,2)
+    }
+
+    fun XOR_A_n8(): Pair<Int,Int> {
+        XOR_A_source(getFromImmediate())
+
+        return Pair(2,2)
+    }
+
     private fun executeOpcode() {
 
     }
@@ -747,6 +837,36 @@ class GBProcessor {
         return (if (getFlag(Flag.C)) 1u else 0u).toUByte()
     }
 
+    private fun getRegisterShort(register: ShortRegister): UShort {
+        val upperByte = registers[register.highIndex]
+        val lowerByte = registers[register.lowIndex]
+        return Pair(upperByte, lowerByte).toUShort()
+    }
 
+    private fun setRegisterShort(value: UShort, register: ShortRegister) {
+        registers[register.highIndex] = value.toUBytePair().first
+        registers[register.lowIndex] = value.toUBytePair().second
+    }
 
+    private fun getFromAddressInHL(): UByte {
+        val address = getRegisterShort(ShortRegister.HL)
+        return memory[address]
+    }
+
+    private fun getFromRegister(register: ByteRegister): UByte {
+        return registers[register.index]
+    }
+
+    private fun getFromImmediate(): UByte {
+        return memory[programCounter + 1u]
+    }
+
+    private fun setToAddressInHL(byte: UByte) {
+        val address = getRegisterShort(ShortRegister.HL)
+        memory[address] = byte
+    }
+
+    private fun setToRegister(byte: UByte, register: ByteRegister) {
+        registers[register.index] = byte
+    }
 }
