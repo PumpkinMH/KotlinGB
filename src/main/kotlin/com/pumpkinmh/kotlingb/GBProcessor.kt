@@ -843,6 +843,253 @@ class GBProcessor {
         return Pair(2,4)
     }
 
+    // Rotate left by 1 through the carry flag
+    fun RL_source(value: UByte): UByte {
+        var result = value.shl(1)
+        if(getFlag(Flag.C)) {
+            ++result
+        }
+        if(value >= 128u) {
+            setFlag(true, Flag.C)
+        } else {
+            setFlag(false, Flag.C)
+        }
+        setFlag(result.toUInt() == 0u, Flag.Z)
+        setFlag(false, Flag.N)
+        setFlag(false, Flag.H)
+
+        return result
+    }
+
+    fun RL_r8(register: ByteRegister): Pair<Int,Int> {
+        setToRegister(RL_source(getFromRegister(register)), register)
+
+        return Pair(2,2)
+    }
+
+    fun RL_HL(): Pair<Int,Int> {
+        setToAddressInHL(RL_source(getFromAddressInHL()))
+
+        return Pair(2,4)
+    }
+
+    fun RLA(): Pair<Int,Int> {
+        setToRegister(RL_source(getFromRegister(ByteRegister.A)), ByteRegister.A)
+
+        setFlag(false, Flag.Z)
+
+        return Pair(1,1)
+    }
+
+    // Rotate left by 1, set carry flag based on previous most significant bit
+    fun RLC_source(value: UByte): UByte {
+        var result = value.shl(1)
+        if(value >= 128u) {
+            setFlag(true, Flag.C)
+            ++result
+        } else {
+            setFlag(false, Flag.C)
+        }
+
+        setFlag(result.toUInt() == 0u, Flag.Z)
+        setFlag(false, Flag.N)
+        setFlag(false, Flag.H)
+
+        return result
+    }
+
+    fun RLC_r8(register: ByteRegister): Pair<Int,Int> {
+        setToRegister(RLC_source(getFromRegister(register)), register)
+
+        return Pair(2,2)
+    }
+
+    fun RLC_HL(): Pair<Int,Int> {
+        setToAddressInHL(RLC_source(getFromAddressInHL()))
+
+        return Pair(2,4)
+    }
+
+    fun RLCA(): Pair<Int,Int> {
+        RLC_r8(ByteRegister.A)
+
+        setFlag(false, Flag.Z)
+
+        return Pair(1,1)
+    }
+
+    fun RR_source(value: UByte): UByte {
+        var result = value.shr(1)
+        if(getFlag(Flag.C)) {
+            result = (result + 128u).toUByte()
+        }
+        if((value % 2u) == 1u) {
+            setFlag(true, Flag.C)
+        } else {
+            setFlag(false, Flag.C)
+        }
+
+        setFlag(result.toUInt() == 0u, Flag.Z)
+        setFlag(false, Flag.N)
+        setFlag(false, Flag.H)
+
+        return result
+    }
+
+    fun RR_r8(register: ByteRegister): Pair<Int, Int> {
+        setToRegister(RR_source(getFromRegister(register)), register)
+
+        return Pair(2,2)
+    }
+
+    fun RR_HL(): Pair<Int,Int> {
+        setToAddressInHL(RR_source(getFromAddressInHL()))
+
+        return Pair(2,4)
+    }
+
+    fun RRA(): Pair<Int,Int> {
+        RR_r8(ByteRegister.A)
+
+        setFlag(false, Flag.Z)
+
+        return Pair(1,1)
+    }
+
+    fun RRC_source(value: UByte): UByte {
+        var result = value.shr(1)
+        if((value % 2u) == 1u) {
+            result = (result + 128u).toUByte()
+            setFlag(true, Flag.C)
+        } else {
+            setFlag(false, Flag.C)
+        }
+
+        setFlag(result.toUInt() == 0u, Flag.Z)
+        setFlag(false, Flag.N)
+        setFlag(false, Flag.H)
+
+        return result
+    }
+
+    fun RRC_r8(register: ByteRegister): Pair<Int, Int> {
+        setToRegister(RRC_source(getFromRegister(register)), register)
+
+        return Pair(2,2)
+    }
+
+    fun RRC_HL(): Pair<Int,Int> {
+        setToAddressInHL(RRC_source(getFromAddressInHL()))
+
+        return Pair(2,4)
+    }
+
+    fun RRCA(): Pair<Int,Int> {
+        RRC_r8(ByteRegister.A)
+
+        setFlag(false, Flag.Z)
+
+        return Pair(1,1)
+    }
+
+    fun SLA_source(value: UByte): UByte {
+        val result = value.toByte().shla().toUByte()
+        setFlag(result.toUInt() == 0u, Flag.Z)
+        setFlag(false, Flag.N)
+        setFlag(false, Flag.H)
+        setFlag(value >= 128u, Flag.C)
+
+        return result
+    }
+
+    fun SLA_r8(register: ByteRegister): Pair<Int, Int> {
+        setToRegister(SLA_source(getFromRegister(register)), register)
+
+        return Pair(2,2)
+    }
+
+    fun SLA_HL(): Pair<Int,Int> {
+        setToAddressInHL(SLA_source(getFromAddressInHL()))
+
+        return Pair(2,4)
+    }
+
+    fun SRA_source(value: UByte): UByte {
+        var result = value.shr(1)
+        if(value >= 128u) {
+            result = (result + 128u).toUByte()
+        }
+
+        setFlag(result.toUInt() == 0u, Flag.Z)
+        setFlag(false, Flag.N)
+        setFlag(false, Flag.H)
+        setFlag(value % 2u == 1u, Flag.C)
+
+        return result
+    }
+
+    fun SRA_r8(register: ByteRegister): Pair<Int, Int> {
+        setToRegister(SRA_source(getFromRegister(register)), register)
+
+        return Pair(2,2)
+    }
+
+    fun SRA_HL(): Pair<Int,Int> {
+        setToAddressInHL(SRA_source(getFromAddressInHL()))
+
+        return Pair(2,4)
+    }
+
+    fun SRL_source(value: UByte): UByte {
+        val result = value.shr(1)
+
+        setFlag(result.toUInt() == 0u, Flag.Z)
+        setFlag(false, Flag.N)
+        setFlag(false, Flag.H)
+        setFlag(value % 2u == 1u, Flag.C)
+
+        return result
+    }
+
+    fun SRL_r8(register: ByteRegister): Pair<Int, Int> {
+        setToRegister(SRL_source(getFromRegister(register)), register)
+
+        return Pair(2,2)
+    }
+
+    fun SRL_HL(): Pair<Int,Int> {
+        setToAddressInHL(SRL_source(getFromAddressInHL()))
+
+        return Pair(2,4)
+    }
+
+    fun SWAP_source(value: UByte): UByte {
+        val upperBits = value.and(0xF0u)
+        val lowerBits = value.and(0x0Fu)
+        val newValue = (upperBits.shr(4)) or (lowerBits.shl(4))
+
+        setFlag(newValue.toUInt() == 0u, Flag.Z)
+        setFlag(false, Flag.N)
+        setFlag(false, Flag.H)
+        setFlag(false, Flag.C)
+
+        return newValue
+    }
+
+    fun SWAP_r8(register: ByteRegister): Pair<Int, Int> {
+        setToRegister(SWAP_source(getFromRegister(register)), register)
+
+        return Pair(2,2)
+    }
+
+    fun SWAP_HL(): Pair<Int,Int> {
+        setToAddressInHL(SWAP_source(getFromAddressInHL()))
+
+        return Pair(2,4)
+    }
+
+
+
     private fun executeOpcode() {
 
     }
@@ -924,4 +1171,17 @@ class GBProcessor {
     private fun setToRegister(byte: UByte, register: ByteRegister) {
         registers[register.index] = byte
     }
+
+    fun Byte.shla(): Byte {
+        var result = (this * 2).toByte()
+        if(this < 0 && result >= 0) {
+            result = (-128 + result).toByte()
+        } else if(this > 0 && result <= 0) {
+            result = (128 + result).toByte()
+        }
+
+        return result
+    }
+
+
 }
