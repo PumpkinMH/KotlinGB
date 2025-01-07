@@ -1231,15 +1231,12 @@ class GBProcessor {
     }
 
     private fun stackPush(byte: UByte) {
-        --stackPointer
-        memory[stackPointer] = byte
+        memory[--stackPointer] = byte
     }
 
     private fun stackPush(short: UShort) {
-        --stackPointer
-        memory[stackPointer] = short.toUBytePair().first
-        --stackPointer
-        memory[stackPointer] = short.toUBytePair().second
+        memory[--stackPointer] = short.toUBytePair().first
+        memory[--stackPointer] = short.toUBytePair().second
     }
 
     private fun stackPopByte(): UByte {
@@ -1247,10 +1244,8 @@ class GBProcessor {
     }
 
     private fun stackPopShort(): UShort {
-        val lowerByte = memory[stackPointer]
-        ++stackPointer
-        val upperByte = memory[stackPointer]
-        ++stackPointer
+        val lowerByte = memory[stackPointer++]
+        val upperByte = memory[stackPointer++]
         return Pair(upperByte,lowerByte).toUShort()
     }
 
