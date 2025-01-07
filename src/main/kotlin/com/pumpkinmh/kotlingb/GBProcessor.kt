@@ -33,6 +33,13 @@ class GBProcessor {
         C(4)
     }
 
+    enum class JumpCondition() {
+        Z,
+        NZ,
+        C,
+        NC
+    }
+
     val registers: UByteArray = UByteArray(8)
 
     var stackPointer: UShort = TODO()
@@ -1088,6 +1095,165 @@ class GBProcessor {
         return Pair(2,4)
     }
 
+    fun JUMP_source(value: UShort) {
+        programCounter = value
+    }
+
+    fun JP_HL(): Pair<Int, Int> {
+        JUMP_source(getRegisterShort(ShortRegister.HL))
+
+        return Pair(1,1)
+    }
+
+    fun JP_n16(): Pair<Int, Int> {
+        JUMP_source(getFromImmediateShort())
+
+        return Pair(3,4)
+    }
+
+    fun JUMP_cc_source(value: UShort, condition: JumpCondition): Boolean {
+        val executeJump = when(condition) {
+            JumpCondition.Z -> getFlag(Flag.Z)
+            JumpCondition.NZ -> !getFlag(Flag.Z)
+            JumpCondition.C -> getFlag(Flag.C)
+            JumpCondition.NC -> !getFlag(Flag.C)
+        }
+
+        if(executeJump) {
+            programCounter = value
+        }
+
+        return executeJump
+    }
+
+    fun CALL_n16(): Pair<Int,Int> {
+        JUMP_source(getFromImmediateShort())
+        stackPush(memory[programCounter + 3u])
+
+        return Pair(3,6)
+    }
+
+    fun CALL_cc_n16(condition: JumpCondition): Pair<Int,Int> {
+        val jumped = JUMP_cc_source(getFromImmediateShort(), condition)
+        if(jumped) {
+            stackPush(memory[programCounter + 3u])
+            return Pair(3,6)
+        } else {
+            return Pair(3,3)
+        }
+    }
+
+    fun JP_cc_n16(address: UShort, condition: JumpCondition): Pair<Int,Int> {
+        val jumped = JUMP_cc_source(address, condition)
+        if(jumped) {
+            return Pair(3,4)
+        } else {
+            return Pair(3,3)
+        }
+    }
+
+    fun JUMP_relative_source(value: UShort, offset: Byte) {
+        JUMP_source((value.toInt() + offset.toInt()).toUShort())
+    }
+
+    fun JUMP_CC_relative_source(value: UShort, offset: Byte, condition: JumpCondition): Boolean {
+        val jumped = when(condition) {
+            JumpCondition.Z -> getFlag(Flag.Z)
+            JumpCondition.NZ -> !getFlag(Flag.Z)
+            JumpCondition.C -> getFlag(Flag.C)
+            JumpCondition.NC -> !getFlag(Flag.C)
+        }
+
+        if(jumped) {
+            JUMP_relative_source(value, offset)
+            return true
+        } else {
+            return false
+        }
+    }
+
+    fun JR_n16(): Pair<Int,Int> {
+        val offset = getFromImmediate().toByte()
+        JUMP_relative_source((programCounter + 2u).toUShort(), offset)
+
+        return Pair(2,3)
+    }
+
+    fun JR_cc_n16(condition: JumpCondition): Pair<Int,Int> {
+        val jumped = JUMP_CC_relative_source((programCounter + 2u).toUShort(), getFromImmediate().toByte(), condition)
+        if(jumped) {
+            return Pair(2,3)
+        } else {
+            return Pair(2,2)
+        }
+    }
+
+    fun RET_cc(condition: JumpCondition): Pair<Int, Int> {
+        val doReturn = when(condition) {
+            JumpCondition.Z -> getFlag(Flag.Z)
+            JumpCondition.NZ -> !getFlag(Flag.Z)
+            JumpCondition.C -> getFlag(Flag.C)
+            JumpCondition.NC -> !getFlag(Flag.C)
+        }
+
+        if(doReturn) {
+            programCounter = stackPopShort()
+            return Pair(1,5)
+        } else {
+            return Pair(1,2)
+        }
+    }
+
+    fun RET(): Pair<Int,Int> {
+        programCounter = stackPopShort()
+
+        return Pair(1,4)
+    }
+
+    fun RST(vector: UByte): Pair<Int,Int> {
+        JUMP_source(vector.toUShort())
+
+        return Pair(1,4)
+    }
+
+    fun RETI(): Pair<Int,Int> {
+        RET()
+
+        TODO()
+
+        return Pair(1,4)
+    }
+
+    fun EI(): Pair<Int,Int> {
+        TODO()
+
+        return Pair(1,1)
+    }
+
+    private fun stackPush(byte: UByte) {
+        --stackPointer
+        memory[stackPointer] = byte
+    }
+
+    private fun stackPush(short: UShort) {
+        --stackPointer
+        memory[stackPointer] = short.toUBytePair().first
+        --stackPointer
+        memory[stackPointer] = short.toUBytePair().second
+    }
+
+    private fun stackPopByte(): UByte {
+        return memory[stackPointer++]
+    }
+
+    private fun stackPopShort(): UShort {
+        val lowerByte = memory[stackPointer]
+        ++stackPointer
+        val upperByte = memory[stackPointer]
+        ++stackPointer
+        return Pair(upperByte,lowerByte).toUShort()
+    }
+
 
 
     private fun executeOpcode() {
@@ -1163,6 +1329,12 @@ class GBProcessor {
         return memory[programCounter + 1u]
     }
 
+    private fun getFromImmediateShort(): UShort {
+        val upperByte = memory[programCounter + 2u]
+        val lowerByte = memory[programCounter + 1u]
+        return Pair(upperByte, lowerByte).toUShort()
+    }
+
     private fun setToAddressInHL(byte: UByte) {
         val address = getRegisterShort(ShortRegister.HL)
         memory[address] = byte
@@ -1182,6 +1354,4 @@ class GBProcessor {
 
         return result
     }
-
-
 }
