@@ -1230,6 +1230,22 @@ class GBProcessor {
         return Pair(1,1)
     }
 
+    fun CCF(): Pair<Int,Int> {
+        setFlag(false, Flag.N)
+        setFlag(false, Flag.H)
+        setFlag(!getFlag(Flag.C), Flag.C)
+
+        return Pair(1,1)
+    }
+
+    fun SCF(): Pair<Int,Int> {
+        setFlag(false, Flag.N)
+        setFlag(false, Flag.H)
+        setFlag(true, Flag.C)
+
+        return Pair(1,1)
+    }
+
     private fun stackPush(byte: UByte) {
         memory[--stackPointer] = byte
     }
