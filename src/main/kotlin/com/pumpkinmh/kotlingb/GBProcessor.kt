@@ -40,6 +40,12 @@ class GBProcessor {
         NC
     }
 
+    enum class State() {
+        NORMAL,
+        HALTED,
+        STOPPED
+    }
+
     val registers: UByteArray = UByteArray(8)
 
     var stackPointer: UShort = TODO()
@@ -49,6 +55,7 @@ class GBProcessor {
 
     var enableInterrupts: Boolean
     var enableInterruptsNextInstruction: Boolean
+    var cpuState: State
 
 
     // Opcodes
@@ -1299,7 +1306,9 @@ class GBProcessor {
     }
 
     fun HALT(): Pair<Int,Int> {
-        return Pair(0,1)
+        cpuState = State.HALTED
+
+        return Pair(1,1)
     }
 
     fun DAA(): Pair<Int,Int> {
@@ -1331,6 +1340,12 @@ class GBProcessor {
         setFlag(false, Flag.H)
 
         return Pair(1,1)
+    }
+
+    fun STOP(): Pair<Int,Int> {
+        cpuState = State.STOPPED
+
+        return Pair(2,1)
     }
 
     private fun stackPush(byte: UByte) {
