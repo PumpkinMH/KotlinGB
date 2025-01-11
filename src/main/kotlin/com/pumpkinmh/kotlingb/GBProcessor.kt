@@ -47,6 +47,9 @@ class GBProcessor {
 
     val memory: GBMemory = TODO()
 
+    var enableInterrupts: Boolean
+    var enableInterruptsNextInstruction: Boolean
+
 
     // Opcodes
     // First value in pair represents the amount to increment PC
@@ -1219,15 +1222,9 @@ class GBProcessor {
     fun RETI(): Pair<Int,Int> {
         RET()
 
-        TODO()
+        enableInterrupts = true
 
         return Pair(1,4)
-    }
-
-    fun EI(): Pair<Int,Int> {
-        TODO()
-
-        return Pair(1,1)
     }
 
     fun CCF(): Pair<Int,Int> {
@@ -1287,6 +1284,53 @@ class GBProcessor {
         PUSH_r16(ShortRegister.AF)
 
         return Pair(1,4)
+    }
+
+    fun DI(): Pair<Int,Int> {
+        enableInterrupts = false
+
+        return Pair(1,1)
+    }
+
+    fun EI(): Pair<Int,Int> {
+        enableInterruptsNextInstruction = true
+
+        return Pair(1,1)
+    }
+
+    fun HALT(): Pair<Int,Int> {
+        return Pair(0,1)
+    }
+
+    fun DAA(): Pair<Int,Int> {
+        if(getFlag(Flag.N)) {
+            var adjustment = 0u
+            if(getFlag(Flag.H)) {
+                adjustment += 0x6u
+            }
+            if(getFlag(Flag.C)) {
+                adjustment += 0x60u
+            }
+            val oldValue = registers[ByteRegister.A.index]
+            registers[ByteRegister.A.index] = (registers[ByteRegister.A.index] - adjustment).toUByte()
+            setFlag(adjustment  > oldValue, Flag.C)
+        } else {
+            var adjustment = 0u
+            if(getFlag(Flag.H) || (getFromRegister(ByteRegister.A).and(0xFu) > 0x9u)) {
+                adjustment += 0x6u
+            }
+            if(getFlag(Flag.C) || (getFromRegister(ByteRegister.A) > 0x9Fu)) {
+                adjustment += 0x60u
+            }
+            val oldValue = registers[ByteRegister.A.index]
+            registers[ByteRegister.A.index] = (registers[ByteRegister.A.index] - adjustment).toUByte()
+            setFlag(borrowFrom(oldValue, adjustment.toUByte(), 8), Flag.C)
+        }
+
+        setFlag(getFromRegister(ByteRegister.A).toUInt() == 0u, Flag.Z)
+        setFlag(false, Flag.H)
+
+        return Pair(1,1)
     }
 
     private fun stackPush(byte: UByte) {
