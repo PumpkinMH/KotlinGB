@@ -1246,6 +1246,49 @@ class GBProcessor {
         return Pair(1,1)
     }
 
+    fun DEC_SP(): Pair<Int,Int> {
+        stackPointer--
+
+        return Pair(1,2)
+    }
+
+    fun INC_SP(): Pair<Int,Int> {
+        stackPointer++
+
+        return Pair(1,2)
+    }
+
+    fun POP_r16(register: ShortRegister): Pair<Int,Int> {
+        registers[register.lowIndex] = stackPopByte()
+        registers[register.highIndex] = stackPopByte()
+
+        return Pair(1,3)
+    }
+
+    fun POP_AF(): Pair<Int,Int> {
+        POP_r16(ShortRegister.AF)
+
+        setFlag(getFromRegister(ByteRegister.FLAG)[7], Flag.Z)
+        setFlag(getFromRegister(ByteRegister.FLAG)[6], Flag.N)
+        setFlag(getFromRegister(ByteRegister.FLAG)[5], Flag.H)
+        setFlag(getFromRegister(ByteRegister.FLAG)[4], Flag.C)
+
+        return Pair(1,3)
+    }
+
+    fun PUSH_r16(register: ShortRegister): Pair<Int,Int> {
+        stackPush(registers[register.highIndex])
+        stackPush(registers[register.lowIndex])
+
+        return Pair(1,4)
+    }
+
+    fun PUSH_AF(): Pair<Int,Int> {
+        PUSH_r16(ShortRegister.AF)
+
+        return Pair(1,4)
+    }
+
     private fun stackPush(byte: UByte) {
         memory[--stackPointer] = byte
     }
