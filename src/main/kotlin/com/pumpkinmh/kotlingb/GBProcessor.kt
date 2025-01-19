@@ -1153,7 +1153,8 @@ class GBProcessor {
         }
     }
 
-    fun JP_cc_n16(address: UShort, condition: JumpCondition): Pair<Int,Int> {
+    fun JP_cc_n16(condition: JumpCondition): Pair<Int,Int> {
+        val address = getFromImmediateShort()
         val jumped = JUMP_cc_source(address, condition)
         if(jumped) {
             return Pair(3,4)
@@ -1221,6 +1222,7 @@ class GBProcessor {
     }
 
     fun RST(vector: UByte): Pair<Int,Int> {
+        stackPush(memory[programCounter + 1u])
         JUMP_source(vector.toUShort())
 
         return Pair(1,4)
@@ -1565,6 +1567,55 @@ class GBProcessor {
             0xBDu -> CP_A_r8(ByteRegister.L)
             0xBEu -> CP_A_HL()
             0xBFu -> CP_A_r8(ByteRegister.A)
+            0xC0u -> RET_cc(JumpCondition.NZ)
+            0xC1u -> POP_r16(ShortRegister.BC)
+            0xC2u -> JP_cc_n16(JumpCondition.NZ)
+            0xC3u -> JP_n16()
+            0xC4u -> CALL_cc_n16(JumpCondition.NZ)
+            0xC5u -> PUSH_r16(ShortRegister.BC)
+            0xC6u -> ADD_A_n8()
+            0xC7u -> RST(0x00u)
+            0xC8u -> RET_cc(JumpCondition.Z)
+            0xC9u -> RET()
+            0xCAu -> JP_cc_n16(JumpCondition.Z)
+            // 0xCB is a special prefix, so it is at the tob
+            0xCCu -> CALL_cc_n16(JumpCondition.Z)
+            0xCDu -> CALL_n16()
+            0xCEu -> ADC_A_n8()
+            0xCFu -> RST(0x08u)
+            0xD0u -> RET_cc(JumpCondition.NC)
+            0xD1u -> POP_r16(ShortRegister.DE)
+            0xD2u -> JP_cc_n16(JumpCondition.NC)
+            // 0xD3 is not an opcode
+            0xD4u -> CALL_cc_n16(JumpCondition.NC)
+            0xD5u -> PUSH_r16(ShortRegister.DE)
+            0xD6u -> SUB_A_n8()
+            0xD7u -> RST(0x10u)
+            0xD8u -> RET_cc(JumpCondition.C)
+            0xD9u -> RETI()
+            0xDAu -> JP_cc_n16(JumpCondition.C)
+            // 0xDB is not an opcode
+            0xDCu -> CALL_cc_n16(JumpCondition.C)
+            // 0xDD is not an opcode
+            0xDEu -> SBC_A_n8()
+            0xDFu -> RST(0x18u)
+            0xE0u -> LDH_n16_A()
+            0xE1u -> POP_r16(ShortRegister.HL)
+            0xE2u -> LDH_C_A()
+            // 0xE3 is not an opcode
+            // 0xE4 is not an opcode
+            0xE5u -> PUSH_r16(ShortRegister.HL)
+            0xE6u -> AND_A_n8()
+            0xE7u -> RST(0x20u)
+            0xE8u -> ADD_SP_e8()
+            0xE9u -> JP_HL()
+            0xEAu -> LD_n16_A()
+            // 0xEB is not an opcode
+            // 0xEC is not an opcode
+            // 0xED is not an opcode
+            0xEEu -> XOR_A_n8()
+            0xEFu -> RST(0x28u)
+
         }
     }
 
