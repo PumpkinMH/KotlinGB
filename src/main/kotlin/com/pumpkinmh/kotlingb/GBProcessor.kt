@@ -1615,6 +1615,22 @@ class GBProcessor {
             // 0xED is not an opcode
             0xEEu -> XOR_A_n8()
             0xEFu -> RST(0x28u)
+            0xF0u -> LDH_A_n16()
+            0xF1u -> POP_AF()
+            0xF2u -> LDH_A_C()
+            0xF3u -> DI()
+            // 0xF4 is not an opcode
+            0xF5u -> PUSH_AF()
+            0xF6u -> OR_A_n8()
+            0xF7u -> RST(0x30u)
+            0xF8u -> LD_HL_SPe8()
+            0xF9u -> LD_SP_HL()
+            0xFAu -> LD_A_n16()
+            0xFBu -> EI()
+            // 0xFC is not an opcode
+            // 0xFD is not an opcode
+            0xFEu -> CP_A_n8()
+            0xFFu -> RST(0x38u)
 
         }
     }
